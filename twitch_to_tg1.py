@@ -4,60 +4,66 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from twitchio.ext import commands
 from telegram import Bot as TelegramBot
 
-# Загружаем переменные из окружения
-TWITCH_TOKEN     = os.environ['TWITCH_TOKEN_2']
-TWITCH_CHANNEL   = os.environ['TWITCH_CHANNEL_2']
-TELEGRAM_TOKEN   = os.environ['TELEGRAM_TOKEN_2']
-TELEGRAM_CHAT_ID = int(os.environ['TELEGRAM_CHAT_ID_2'])
+# Конфигурация (все секретные данные через переменные окружения)
+CONFIG = {
+    'TWITCH_TOKEN': os.getenv('TWITCH_TOKEN', 'oauth:19cot6n9t0mez7j80q7ft611wqrb3a'),  # Только для локального тестирования!
+    'TWITCH_CHANNEL': os.getenv('TWITCH_CHANNEL', ''),  # Ваш канал в lowercase
+    'TELEGRAM_TOKEN': os.getenv('TELEGRAM_TOKEN', ''),
+    'TELEGRAM_CHAT_ID': int(os.getenv('TELEGRAM_CHAT_ID', 0))
+}
 
-# Основной класс бота
 class BridgeBot(commands.Bot):
     def __init__(self):
         super().__init__(
-            token=TWITCH_TOKEN,
+            token=CONFIG['TWITCH_TOKEN'],
             prefix='!',
-            initial_channels=[TWITCH_CHANNEL]
+            initial_channels=[CONFIG['TWITCH_CHANNEL']]
         )
-        self.tg = TelegramBot(token=TELEGRAM_TOKEN)
-        self.tg_chat_id = TELEGRAM_CHAT_ID
+        self.tg = TelegramBot(token=CONFIG['TELEGRAM_TOKEN'])
+        self.tg_chat_id = CONFIG['TELEGRAM_CHAT_ID']
 
     async def event_ready(self):
-        print(f'Logged in as | {self.nick}')
+        print(f'Бот подключен как | {self.nick}')
 
     async def event_message(self, message):
         if message.author.name.lower() == self.nick.lower():
             return
 
         text = f'<{message.author.name}>: {message.content}'
-        print("Отправляем в Telegram:", text)
-        await self.tg.send_message(chat_id=self.tg_chat_id, text=text)
-        await self.handle_commands(message)
+        try:
+            await self.tg.send_message(chat_id=self.tg_chat_id, text=text)
+        except Exception as e:
+            print(f"Ошибка Telegram: {e}")
 
-    # +++ ДОБАВЛЕНО НОВЫЙ МЕТОД +++
     async def event_error(self, error):
-        print(f"[ERROR] {error}")
+        print(f"Twitch ошибка: {error}")
         await self.close()
 
-# HTTP-сервер для Render (ping-keepalive)
-class PingHandler(BaseHTTPRequestHandler):
+class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"I'm alive!")
+        self.wfile.write(b"OK")
 
-def run_fake_server():
-    port = int(os.environ.get('PORT', 10000))  # обязательно int
-    server = HTTPServer(('0.0.0.0', port), PingHandler)
+def run_server():
+    server = HTTPServer(('0.0.0.0', int(os.getenv('PORT', 10000))), HealthHandler)
     server.serve_forever()
 
-# Запускаем "пустой" HTTP-сервер в фоне (для Render)
-threading.Thread(target=run_fake_server, daemon=True).start()
-
-# Запуск бота
 if __name__ == '__main__':
-    # +++ ДОБАВЛЕНА ОБРАБОТКА ОШИБОК +++
+    # Проверка конфигурации
+    if not CONFIG['TWITCH_TOKEN'].startswith('oauth:'):
+        print("ОШИБКА: Неверный формат Twitch токена")
+        exit(1)
+        
+    if not CONFIG['TWITCH_CHANNEL']:
+        print("ОШИБКА: Укажите TWITCH_CHANNEL")
+        exit(1)
+
+    threading.Thread(target=run_server, daemon=True).start()
+    
     try:
         bot = BridgeBot()
         bot.run()
     except Exception as e:
-        print(f"FATAL ERROR: {e}")
+        print(f"Критическая ошибка: {e}")
+        exit(1)
