@@ -41,3 +41,20 @@ class BridgeBot(commands.Bot):
 if __name__ == '__main__':
     bot = BridgeBot()
     bot.run()
+
+
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class PingHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"I'm alive!")
+
+def run_fake_server():
+    server = HTTPServer(('0.0.0.0', 10000), PingHandler)
+    server.serve_forever()
+
+# Запускаем сервер в фоновом потоке
+threading.Thread(target=run_fake_server, daemon=True).start()
