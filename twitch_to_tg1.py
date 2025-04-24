@@ -2,11 +2,11 @@ import os
 from twitchio.ext import commands
 from telegram import Bot as TelegramBot
 
-# 1) Вставьте сюда ваши токены и настройки:
-TWITCH_TOKEN = os.environ['TWITCH_TOKEN']
-TWITCH_CHANNEL = os.environ['TWITCH_CHANNEL']
-TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
-TELEGRAM_CHAT_ID = int(os.environ['TELEGRAM_CHAT_ID'])
+# Загружаем переменные из окружения
+TWITCH_TOKEN    = os.environ['TWITCH_TOKEN_2']
+TWITCH_CHANNEL  = os.environ['TWITCH_CHANNEL_2']
+TELEGRAM_TOKEN  = os.environ['TELEGRAM_TOKEN_2']
+TELEGRAM_CHAT_ID = int(os.environ['TELEGRAM_CHAT_ID_2'])
 
 class BridgeBot(commands.Bot):
     def __init__(self):
