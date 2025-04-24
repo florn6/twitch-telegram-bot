@@ -33,6 +33,11 @@ class BridgeBot(commands.Bot):
         await self.tg.send_message(chat_id=self.tg_chat_id, text=text)
         await self.handle_commands(message)
 
+    # +++ ДОБАВЛЕНО НОВЫЙ МЕТОД +++
+    async def event_error(self, error):
+        print(f"[ERROR] {error}")
+        await self.close()
+
 # HTTP-сервер для Render (ping-keepalive)
 class PingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -50,5 +55,9 @@ threading.Thread(target=run_fake_server, daemon=True).start()
 
 # Запуск бота
 if __name__ == '__main__':
-    bot = BridgeBot()
-    bot.run()
+    # +++ ДОБАВЛЕНА ОБРАБОТКА ОШИБОК +++
+    try:
+        bot = BridgeBot()
+        bot.run()
+    except Exception as e:
+        print(f"FATAL ERROR: {e}")
