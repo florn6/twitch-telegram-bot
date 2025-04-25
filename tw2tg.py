@@ -5,7 +5,7 @@ from twitchio.ext import commands
 from telegram import Bot as TelegramBot
 
 # Переменные окружения
-TWITCH_TOKEN     = os.environ['TWITCH_TOKENч']
+TWITCH_TOKEN     = os.environ['TWITCH_TOKEN']
 TWITCH_CHANNEL   = os.environ['TWITCH_CHANNEL']
 TELEGRAM_TOKEN   = os.environ['TELEGRAM_TOKEN']
 TELEGRAM_CHAT_ID = int(os.environ['TELEGRAM_CHAT_ID'])
