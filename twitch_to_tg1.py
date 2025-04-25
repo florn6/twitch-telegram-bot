@@ -30,7 +30,7 @@ class BridgeBot(commands.Bot):
             return
 
         # Формируем сообщение
-        text = f'<{message.author.name}>: {message.content}'
+        text = f'🎮{message.author.name}: {message.content}'
         
         # Логируем в консоль (Render лог)
         print(f'📩 Новое сообщение от {message.author.name}: {message.content}')
