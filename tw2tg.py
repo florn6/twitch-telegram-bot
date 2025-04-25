@@ -27,7 +27,7 @@ class BridgeBot(commands.Bot):
         if message.author.name.lower() == self.nick.lower():
             return
 
-        text = f'🔥{message.author.name}: {message.content}'
+        text = f'{message.author.name}: {message.content}'
         await self.tg.send_message(chat_id=TELEGRAM_CHAT_ID, text=text)
         await self.handle_commands(message)
 
