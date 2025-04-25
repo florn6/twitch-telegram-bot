@@ -5,12 +5,12 @@ from twitchio.ext import commands
 from telegram import Bot as TelegramBot
 
 # Загружаем переменные из окружения
-TWITCH_TOKEN     = os.environ['TWITCH_TOKEN_2']
-TWITCH_CHANNEL   = os.environ['TWITCH_CHANNEL_2']
-TELEGRAM_TOKEN   = os.environ['TELEGRAM_TOKEN_2']
-TELEGRAM_CHAT_ID = int(os.environ['TELEGRAM_CHAT_ID_2'])
+TWITCH_TOKEN     = os.environ['TWITCH_TOKEN']        # токен от аккаунта tw2tg_bot
+TWITCH_CHANNEL   = os.environ['TWITCH_CHANNEL']      # имя канала, например forlorn_6
+TELEGRAM_TOKEN   = os.environ['TELEGRAM_TOKEN']      # токен Telegram-бота
+TELEGRAM_CHAT_ID = int(os.environ['TELEGRAM_CHAT_ID'])  # ID, куда слать (например, твой ID)
 
-# Основной класс бота
+# Основной Twitch->Telegram бот
 class BridgeBot(commands.Bot):
     def __init__(self):
         super().__init__(
@@ -22,18 +22,27 @@ class BridgeBot(commands.Bot):
         self.tg_chat_id = TELEGRAM_CHAT_ID
 
     async def event_ready(self):
-        print(f'Logged in as | {self.nick}')
+        print(f'✅ Twitch бот запущен как {self.nick}')
 
     async def event_message(self, message):
+        # Игнорируем свои собственные сообщения
         if message.author.name.lower() == self.nick.lower():
             return
 
+        # Формируем сообщение
         text = f'<{message.author.name}>: {message.content}'
-        print("Отправляем в Telegram:", text)
+        
+        # Логируем в консоль (Render лог)
+        print(f'📩 Новое сообщение от {message.author.name}: {message.content}')
+        print(f'⏩ Отправляем в Telegram: {text}')
+        
+        # Отправляем в Telegram
         await self.tg.send_message(chat_id=self.tg_chat_id, text=text)
+        
+        # Обработка команд, если будут
         await self.handle_commands(message)
 
-# HTTP-сервер для Render (ping-keepalive)
+# "Фальшивый" HTTP-сервер, чтобы Render не засыпал
 class PingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -41,14 +50,14 @@ class PingHandler(BaseHTTPRequestHandler):
         self.wfile.write(b"I'm alive!")
 
 def run_fake_server():
-    port = int(os.environ.get('PORT', 10000))  # обязательно int
+    port = int(os.environ.get('PORT', 10000))
     server = HTTPServer(('0.0.0.0', port), PingHandler)
     server.serve_forever()
 
-# Запускаем "пустой" HTTP-сервер в фоне (для Render)
+# Запускаем сервер в фоне
 threading.Thread(target=run_fake_server, daemon=True).start()
 
-# Запуск бота
+# Запуск Twitch-бота
 if __name__ == '__main__':
     bot = BridgeBot()
     bot.run()
